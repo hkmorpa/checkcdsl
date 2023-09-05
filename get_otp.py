@@ -33,7 +33,7 @@ def get_otp(email_arg):
         print("To:", msg["To"])
         print("Subject:", subject)
         print("Date:", msg["Date"])
-        if(email_arg == msg["To"].strip()):
+        if(email_arg.lower() == msg["To"].strip().lower()):
             #Body of the mail from which we need to get the OTP:
             body = msg.get_payload(decode=True).decode()
             lines = body.splitlines()
