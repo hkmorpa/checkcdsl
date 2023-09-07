@@ -14,7 +14,7 @@ from get_otp import get_otp
 
 # Create a lock to synchronize access to the file
 file_lock = threading.Lock()
-status_file = "D:\Python\office\status.txt"
+status_file = "C:\checkcdsl\status.txt"
 
 def write_status(status):
     with file_lock:
@@ -125,7 +125,7 @@ def process_pledge(pan_number,email):
        
 
 threads = []
-with open("D:\Python\office\pan_email.txt", 'r') as file:
+with open("C:\checkcdsl\pan_email.txt", 'r') as file:
     for line in file:
         #skip processed PAN numbers
         pan, email = line.split()
