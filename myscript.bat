@@ -1,0 +1,23 @@
+@echo off
+setlocal enabledelayedexpansion
+
+:loop
+
+python "D:\Python\office\cdsl_pledge_approval.py"
+
+rem Count the number of lines in pan_email.txt
+set "pan_email_count=0"
+for /f %%i in ('type "D:\Python\office\pan_email.txt" ^| find /c /v ""') do set "pan_email_count=%%i"
+
+rem Count the number of lines in status.txt
+set "status_count=0"
+for /f %%i in ('type "D:\Python\office\status.txt" ^| find /c /v ""') do set "status_count=%%i"
+
+rem Check if the count in pan_email.txt is less than the count in status.txt
+if !status_count! lss !pan_email_count! (
+    rem Run the Python script
+    python "D:\Python\office\cdsl_pledge_approval.py"
+    goto :loop
+)
+
+endlocal
