@@ -42,9 +42,9 @@ def get_otp(email_arg):
                 eighth_line = lines[7]  # Lines are 0-indexed
                 words = eighth_line.split()
                 if len(words) >= 24:
-                    twentyfourth_word = words[23]  # Words are 0-indexed
+                    twentyfourth_word = words[19]  # Words are 0-indexed
                     if len(twentyfourth_word) >= 12:
-                        OTP = twentyfourth_word[11:15]  # Characters are 0-indexed
+                        OTP = twentyfourth_word[0:4]  # Characters are 0-indexed
                         print("OTP:", OTP)
                         ret_val = OTP
             break
