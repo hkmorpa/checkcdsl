@@ -1,6 +1,8 @@
 @echo off
 setlocal enabledelayedexpansion
 
+del "C:\checkcdsl\status.txt"
+
 :loop
 
 python "C:\checkcdsl\cdsl_pledge_approval.py"

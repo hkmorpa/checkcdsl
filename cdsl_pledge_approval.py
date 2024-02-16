@@ -67,11 +67,13 @@ def approve_pledge(pan_number,email):
         print("session had expired. Restarting...")
         driver.quit()
         return 2
-    except:
-        print("Pledge not available for Pan number...",pan_number)
-        write_status(pan_number+" "+email)
-        driver.quit()
-        return 3  
+    except :
+        if "Margin pledge set up is not present for input" in driver.page_source:
+            print("HKG Margin pledge set up is not present for input:", pan_number)
+            write_status(pan_number + " " + email)
+            return 3
+        # in case of other exception
+        return 2  
 
     # Obtain OTP
     # JavaScript snippet for obscured button
@@ -125,9 +127,12 @@ def process_pledge(pan_number,email):
        
 
 threads = []
+max_threads = 20
+thread_count = 0
 with open("C:\checkcdsl\pan_email.txt", 'r') as file:
     for line in file:
         #skip processed PAN numbers
+        print("Line is HKG",line)
         pan, email = line.split()
         if pan_in_status(pan) > 0:
             print("Pledge not available for ",pan)
@@ -136,6 +141,9 @@ with open("C:\checkcdsl\pan_email.txt", 'r') as file:
         threads.append(thread)
         thread.start()
         print("Thread started with ",pan.strip(),email.strip())
+        thread_count = thread_count + 1
+        if thread_count >= max_threads:
+            break
 # Wait for all threads to finish
 for thread in threads:
     thread.join()
