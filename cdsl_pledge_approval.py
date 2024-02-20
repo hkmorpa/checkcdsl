@@ -83,7 +83,7 @@ def approve_pledge(pan_number,email):
     
     # Input OTP2:
     OTP1 = get_otp(email)
-    print("OTP used is", OTP1)
+    print("OTP used is ", OTP1, "For email ",email)
 
     try:
         # Entering OTP:

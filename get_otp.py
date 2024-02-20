@@ -4,6 +4,7 @@ from email.header import decode_header
 
 def get_otp(email_arg):
     # Connect to the IMAP server
+    print("OTP GETTING FOR EMAIL", email_arg)
     mail = imaplib.IMAP4_SSL("imap.gmail.com")
     #mail.login("allclientshkg@gmail.com", "bzpsxfoczisgxqns")
     mail.login("allclientshkg@gmail.com", "dieturnktsjpixsj")
