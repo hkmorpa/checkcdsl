@@ -8,6 +8,5 @@ python -m pip install --upgrade pip
 then on command prompt run
 pip install selenium
 
-pip install gspread
-python.exe -m pip install --upgrade pip
-pip install oauth2client
+
+

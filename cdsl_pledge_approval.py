@@ -10,30 +10,39 @@ import threading
 import time
 import sys
 import re
+import gspread
+import json
+from oauth2client.service_account import ServiceAccountCredentials
 from get_otp import get_otp
 
 # Create a lock to synchronize access to the file
 file_lock = threading.Lock()
 status_file = "C:\checkcdsl\status.txt"
 
-def write_status(status):
-    with file_lock:
-        with open(status_file, "a") as file:
-            file.write(status + "\n")
+scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
+credentials = ServiceAccountCredentials.from_json_keyfile_name(
+    "./nirmalbang-6168910b93f4.json", scope
+)
+# Authenticate with the Google Sheets API
+gc = gspread.authorize(credentials)
+# Open the Google Sheet by its title
+sheet_title = "checkcdsl"
+print ("read_sheet called")
+spreadsheet = gc.open(sheet_title)
+worksheet_list = spreadsheet.worksheets()
+global worksheet
 
-def pan_in_status(pan):
-    try:
-        with open(status_file, 'r') as file:
-            file_contents = file.read()
-            pan_matches = re.findall(pan, file_contents)
-            return len(pan_matches)
-    except:
-        file = open(status_file, "w+")
-        return 0
-        
+def write_status(pan, status):
+    data = worksheet.get_all_values()
+    for row in range(2, 1001):
+        if pan in data[row][0].strip():
+            worksheet.update_cell(row + 1, 2, status)
+            return
+    print("write_status::PAN not found, MAJOR ERROR")
 
 def approve_pledge(pan_number,email):   
     # Create a new instance of the Chrome driver
+    print("approve_pledge::PAN to be processed is ", pan_number, email)
     chrome_options = Options()
     chrome_options.add_argument("--headless")  # Add headless argument
 
@@ -70,7 +79,7 @@ def approve_pledge(pan_number,email):
     except :
         if "Margin pledge set up is not present for input" in driver.page_source:
             print("HKG Margin pledge set up is not present for input:", pan_number)
-            write_status(pan_number + " " + email)
+            write_status(pan_number, "nopledge")
             return 3
         # in case of other exception
         return 2  
@@ -83,7 +92,7 @@ def approve_pledge(pan_number,email):
     
     # Input OTP2:
     OTP1 = get_otp(email)
-    print("OTP used is ", OTP1, "For email ",email)
+    print("OTP used is", OTP1)
 
     try:
         # Entering OTP:
@@ -110,45 +119,57 @@ def approve_pledge(pan_number,email):
     driver.quit()
     return 1
 
-def process_pledge(pan_number,email):   
-    print("PAN",pan_number)
-    ret_value = approve_pledge(pan_number,email.strip())
+def process_pledge(pan,email):   
+
+    print("process_pledge::PAN to be processed is", pan)
+    ret_value = approve_pledge(pan,email)
 
     if(ret_value == 1): #pledge approved
-        print("Processing is complete for Pan Number: ", pan_number)
+        print("Processing is complete for Pan Number: ", pan)
     if(ret_value == 2): #session timeout
         while(1):
-            ret_value = approve_pledge(pan_number,email.strip())
+            ret_value = approve_pledge(pan,email.strip())
             if(ret_value == 2):
                 continue
             else:
-                print("Either approved or no pledge for Pan Number: ", pan_number)
+                print("Either approved or no pledge for Pan Number: ", pan)
                 break
        
 
 threads = []
 max_threads = 20
 thread_count = 0
-with open("C:\checkcdsl\pan_email.txt", 'r') as file:
-    for line in file:
+
+for worksheet in worksheet_list:
+    # Read data from the Google Sheet
+    data = worksheet.get_all_values()
+    pan_start = 2
+    pan = "DUMMY"
+    while "ENDPAN" not in pan:      #Handles PAN till ENDPAN
         #skip processed PAN numbers
-        print("Line is HKG",line)
-        pan, email = line.split()
-        if pan_in_status(pan) > 0:
-            print("Pledge not available for ",pan)
+        pan = data[pan_start][0].strip()
+        email = data[pan_start][3].strip().lower()
+        status = data[pan_start][1].strip().lower()
+        if "ENDPAN" in pan:
+            break
+        pan_start = pan_start + 1
+        print("PAN to be processed is" , pan, email, status)
+        if "nopledge" in status:
+            print("Pledge not available for ",pan)          
             continue
-        thread = threading.Thread(target=process_pledge, args=(pan.strip(),email.strip()))
+        print("PAN to be processed is" , pan)
+        thread = threading.Thread(target=process_pledge, args=(pan, email))
+        print("PAN to be processed is" , pan)
         threads.append(thread)
         thread.start()
         print("Thread started with ",pan.strip(),email.strip())
         thread_count = thread_count + 1
         if thread_count >= max_threads:
-            break
+            thread_count = 0
+            time.sleep(150)
+            continue
 # Wait for all threads to finish
 for thread in threads:
     thread.join()
-
-if len(threads) == 0:
-    file = open(status_file, "w+")
 
 print("All threads have finished.")
