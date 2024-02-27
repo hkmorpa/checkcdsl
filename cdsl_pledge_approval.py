@@ -139,13 +139,13 @@ def process_pledge(pan,email):
 threads = []
 max_threads = 20
 thread_count = 0
+processed = 0
 
 for worksheet in worksheet_list:
     # Read data from the Google Sheet
     data = worksheet.get_all_values()
     pan_start = 2
-    pan = "DUMMY"
-    while "ENDPAN" not in pan:      #Handles PAN till ENDPAN
+    while True:      #Handles PAN till ENDPAN
         #skip processed PAN numbers
         pan = data[pan_start][0].strip()
         email = data[pan_start][3].strip().lower()
@@ -157,8 +157,8 @@ for worksheet in worksheet_list:
         if "nopledge" in status:
             print("Pledge not available for ",pan)          
             continue
-        print("PAN to be processed is" , pan)
         thread = threading.Thread(target=process_pledge, args=(pan, email))
+        processed = 1
         print("PAN to be processed is" , pan)
         threads.append(thread)
         thread.start()
@@ -168,8 +168,25 @@ for worksheet in worksheet_list:
             thread_count = 0
             time.sleep(150)
             continue
+    
 # Wait for all threads to finish
 for thread in threads:
     thread.join()
+
+if processed == 0:
+    for worksheet in worksheet_list:
+        # Read data from the Google Sheet
+        data = worksheet.get_all_values()
+        pan_start = 2
+        while True:      #Handles PAN till ENDPAN
+            #skip processed PAN numbers
+            pan = data[pan_start][0].strip()
+            write_status(pan, "EMPTY")
+            pan_start = pan_start + 1
+            if pan_start%30 == 0:
+                time.sleep(60)
+                
+            if "ENDPAN" in pan:
+                break
 
 print("All threads have finished.")
