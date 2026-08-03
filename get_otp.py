@@ -6,7 +6,7 @@ def get_otp(email_arg):
     # Connect to the IMAP server
     mail = imaplib.IMAP4_SSL("imap.gmail.com")
     #mail.login("allclientshkg@gmail.com", "bzpsxfoczisgxqns")
-    mail.login("allclientshkg@gmail.com", "dieturnktsjpixsj")
+    mail.login("allclientshkg@gmail.com", "mtfhdsseplovwumn")
 
     # Select a mailbox (e.g., "INBOX")
     mailbox = "INBOX"
