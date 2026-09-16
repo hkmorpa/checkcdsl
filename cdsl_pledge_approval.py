@@ -42,14 +42,23 @@ def find_header_row(data):
     return None
 
 def write_status(pan, status):
-    data = worksheet.get_all_values()
-    header_row = find_header_row(data)
-    start_row = header_row + 1 if header_row is not None else 2
-    for row in range(start_row, len(data)):
-        if pan in data[row][0].strip():
-            worksheet.update_cell(row + 1, 2, status)
-            return
-    print("write_status::PAN not found, MAJOR ERROR")
+    with file_lock:
+        for attempt in range(5):
+            try:
+                data = worksheet.get_all_values()
+                header_row = find_header_row(data)
+                start_row = header_row + 1 if header_row is not None else 2
+                for row in range(start_row, len(data)):
+                    if pan in data[row][0].strip():
+                        worksheet.update_cell(row + 1, 2, status)
+                        return
+                print("write_status::PAN not found, MAJOR ERROR")
+                return
+            except gspread.exceptions.APIError as e:
+                if "429" in str(e) and attempt < 4:
+                    time.sleep(2 ** attempt)
+                    continue
+                raise
 
 def approve_pledge(pan_number,email):
     # Blocks here until fewer than max_threads Chrome sessions are running
