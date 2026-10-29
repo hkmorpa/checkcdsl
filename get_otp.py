@@ -1,12 +1,13 @@
 import imaplib
 import email
+import re
 from email.header import decode_header
 
 def get_otp(email_arg):
     # Connect to the IMAP server
     mail = imaplib.IMAP4_SSL("imap.gmail.com")
     #mail.login("allclientshkg@gmail.com", "bzpsxfoczisgxqns")
-    mail.login("allclientshkg@gmail.com", "mtfhdsseplovwumn")
+    mail.login("allclientshkg@gmail.com", "xiuvgeiwybdtazgk")
 
     # Select a mailbox (e.g., "INBOX")
     mailbox = "INBOX"
@@ -37,16 +38,15 @@ def get_otp(email_arg):
         if(email_arg.lower() == msg["To"].strip().lower()):
             #Body of the mail from which we need to get the OTP:
             body = msg.get_payload(decode=True).decode()
-            lines = body.splitlines()
-            if len(lines) >= 8:
-                eighth_line = lines[7]  # Lines are 0-indexed
-                words = eighth_line.split()
-                if len(words) >= 24:
-                    twentyfourth_word = words[19]  # Words are 0-indexed
-                    if len(twentyfourth_word) >= 12:
-                        OTP = twentyfourth_word[0:4]  # Characters are 0-indexed
-                        print("OTP:", OTP)
-                        ret_val = OTP
+            match = re.search(r"(?:OTP|One Time Password)\D{0,30}?(\d{4,6})", body, re.IGNORECASE)
+            if not match:
+                match = re.search(r"\b(\d{4,6})\b", body)
+            if match:
+                OTP = match.group(1)[0:4]
+                print("OTP:", OTP)
+                ret_val = OTP
+            else:
+                print("get_otp::Could not find OTP in body:", body)
             break
         i = i + 1
     # Logout and close the connection
