@@ -38,7 +38,10 @@ def get_otp(email_arg):
         if(email_arg.lower() == msg["To"].strip().lower()):
             #Body of the mail from which we need to get the OTP:
             body = msg.get_payload(decode=True).decode()
-            match = re.search(r"(?:OTP|One Time Password)\D{0,30}?(\d{4,6})", body, re.IGNORECASE)
+            # CDSL template: "... Demat Account no. *XXXXXXXX is. : 4385"
+            match = re.search(r"\bis\.?\s*:\s*(\d{4,6})", body, re.IGNORECASE)
+            if not match:
+                match = re.search(r"(?:OTP|One Time Password)\D{0,30}?(\d{4,6})", body, re.IGNORECASE)
             if not match:
                 match = re.search(r"\b(\d{4,6})\b", body)
             if match:
